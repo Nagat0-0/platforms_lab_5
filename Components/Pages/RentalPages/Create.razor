@@ -1,0 +1,87 @@
+@page "/rentals/create"
+@using Microsoft.EntityFrameworkCore
+@using lab_5.Models
+@inject IDbContextFactory<lab_5.Models.RentalDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Rental</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Rental" OnValidSubmit="AddRental" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            
+            <div class="mb-3">
+                <label for="clientid" class="form-label">Client:</label> 
+                <InputSelect id="clientid" @bind-Value="Rental.ClientId" class="form-control">
+                    <option value="">-- Select Client --</option>
+                    @foreach (var client in ClientsList)
+                    {
+                        <option value="@client.Id">@client.LastName @client.FirstName</option>
+                    }
+                </InputSelect> 
+                <ValidationMessage For="() => Rental.ClientId" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="productid" class="form-label">Product:</label> 
+                <InputSelect id="productid" @bind-Value="Rental.ProductId" class="form-control">
+                    <option value="">-- Select Product --</option>
+                    @foreach (var product in ProductsList)
+                    {
+                        <option value="@product.Id">@product.Title</option>
+                    }
+                </InputSelect> 
+                <ValidationMessage For="() => Rental.ProductId" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="issuedate" class="form-label">IssueDate:</label> 
+                <InputDate id="issuedate" @bind-Value="Rental.IssueDate" class="form-control" /> 
+                <ValidationMessage For="() => Rental.IssueDate" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="returndate" class="form-label">ReturnDate:</label> 
+                <InputDate id="returndate" @bind-Value="Rental.ReturnDate" class="form-control" /> 
+                <ValidationMessage For="() => Rental.ReturnDate" class="text-danger" /> 
+            </div>        
+            
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/rentals">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Rental Rental { get; set; } = default!;
+
+    private List<Client> ClientsList = new();
+    private List<Product> ProductsList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Rental ??= new();
+        using var context = DbFactory.CreateDbContext();
+
+        ClientsList = await context.Clients.ToListAsync();
+        ProductsList = await context.Products.ToListAsync();
+    }
+
+    private async Task AddRental()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Rentals.Add(Rental);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/rentals");
+    }
+}

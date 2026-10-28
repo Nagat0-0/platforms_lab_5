@@ -1,0 +1,42 @@
+@page "/rentals"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.EntityFrameworkCore
+@using lab_5.Models
+@using Microsoft.EntityFrameworkCore
+@implements IAsyncDisposable
+@inject IDbContextFactory<lab_5.Models.RentalDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="rentals/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Rentals.Include(r => r.Client).Include(r => r.Product)">
+    <TemplateColumn Context="rentalItem" Title="Client">
+    @rentalItem.Client!.LastName @rentalItem.Client!.FirstName
+</TemplateColumn>
+    <PropertyColumn Property="rental => rental.Product.Title" Title="Product" />
+    <PropertyColumn Property="rental => rental.IssueDate" />
+    <PropertyColumn Property="rental => rental.ReturnDate" />
+
+    <TemplateColumn Context="rental">
+        <a href="@($"rentals/edit?id={rental.Id}")">Edit</a> |
+        <a href="@($"rentals/details?id={rental.Id}")">Details</a> |
+        <a href="@($"rentals/delete?id={rental.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private RentalDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

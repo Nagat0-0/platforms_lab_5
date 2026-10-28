@@ -1,0 +1,58 @@
+@page "/rentals/details"
+@using Microsoft.EntityFrameworkCore
+@using lab_5.Models
+@inject IDbContextFactory<lab_5.Models.RentalDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Rental</h2>
+    <hr />
+    @if (rental is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Client</dt>
+            <dd class="col-sm-10">@rental.Client?.LastName @rental.Client?.FirstName</dd>
+            
+            <dt class="col-sm-2">Product</dt>
+            <dd class="col-sm-10">@rental.Product?.Title</dd>
+            
+            <dt class="col-sm-2">IssueDate</dt>
+            <dd class="col-sm-10">@rental.IssueDate</dd>
+            
+            <dt class="col-sm-2">ReturnDate</dt>
+            <dd class="col-sm-10">@rental.ReturnDate</dd>
+        </dl>
+        <div>
+            <a href="@($"/rentals/edit?id={rental.Id}")">Edit</a> |
+            <a href="@($"/rentals")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Rental? rental;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        rental = await context.Rentals
+            .Include(r => r.Client)
+            .Include(r => r.Product)
+            .FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (rental is null)
+        {
+            NavigationManager.NotFound();
+        }
+    }
+}
